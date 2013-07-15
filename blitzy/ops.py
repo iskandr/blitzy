@@ -1,7 +1,7 @@
 from collections import namedtuple
 import numpy as np 
 
-Index = namedtuple('Index', ('iname', 'start', 'stop', 'step'))
+IndexRange = namedtuple('IndexRange', ('iname', 'start', 'stop', 'step'))
 
 class Kernel(object):
 
@@ -36,30 +36,74 @@ class Kernel(object):
 
 
 class Expr(object):
-    def __init__(self, my_kernel=None):
-        if my_kernel is None:
-          my_kernel = Kernel({}, {}, set([]))
+  def __init__(self):
+    self.kernel = Kernel()
+  
+  def sum(self, axis = None):
+    return Sum(self, axis = None)
 
-        self.my_kernel = my_kernel
+  def mean(self):
+    return Mean(self, axis = None)
 
-    
+class Const(Expr):
+    def __init__(self, value):
+      Expr.__init__(self)
+      self.value = value 
+  
+    def expr_str(self):
+      return "%s" % self.value 
+
+def as_expr(x):
+  if isinstance(bool, int, long, float):
+      return Const(x)
+  assert isinstance(x, Expr)
+  return x 
 
 class Each(Expr):
   _name_counter = 0
 
-  def __init__(self, xs, name = None, axis = None):
-
-    self.kernel = Kernel()
-    assert isinstance(xs, np.ndarray)
-    self.arg = xs 
-
+  def __init__(self, x, name = None, axis = None):    
+    Expr.__init__(self)
+    assert axis is None
+    assert isinstance(x, np.ndarray)
+    self.x = x
+    
     if name is None:
         self._name_counter += 1
         name = "arg%d" % self._name_counter
 
+    self.name = name 
     self.axis = axis 
 
-  
+    assert name not in self.kernel.args, \
+            "Already have an argument named" % name
+    self.kernel.args[name] = x
+    
+    iname = "%s_idx" % name 
+    irange = IndexRange(iname, 0, len(x), 1)
+    self.kernel.indices[name] = irange
+
+  def __str__(self):
+      print "Each(%s, name = %s, axis = %s)" % (self.x, self.name, self.axis)
+
+
+class Add(Expr):
+  def __init__(self, x, y):
+    self.kernel = Kernel()
+    self.kernel.combine(x)
+    self.kernel.combine(y)
+    self.x = x
+    self.y = y
+    
+  def expr_str(self):
+    return "%s + %s" % (x.expr_str(), y.expr_str())
+
+
+class Sum(Expr):
+  pass 
+
+class Mean(Expr):
+  pass
 
  
 
