@@ -1,37 +1,60 @@
 from collections import namedtuple
 import numpy as np 
 
+
+"""
+
+  Kernel(x*y)? 
+
+  k = Kernel()
+  x,y = k.each(Value(X, name = 'X'), Value(Y, name = 'Y'))
+  z = Result?? 
+
+  Lord, how will this work? 
+
+"""
+
+
+
+
 IndexRange = namedtuple('IndexRange', ('iname', 'start', 'stop', 'step'))
+
 
 class Kernel(object):
 
-    def __init__(self, args=None, indices=None, stmts=None):
-      if args is None: args = {}
-      if indices is None: indices = {}
-      if stmts is None: stmts = set([])
+  def __init__(self, args=None, indices=None, stmts=None):
+    if args is None: args = {}
+    if indices is None: indices = {}
+    if stmts is None: stmts = set([])
 
-      # mapping from names to values
-      self.args = dict(args)
+    # mapping from names to values
+    self.args = dict(args)
 
-      # mapping from name of data argument to 
-      self.indices = dict(indices)
+    # mapping from name of data argument to 
+    self.indices = dict(indices)
       
-      # set of stmts as string literals 
-      self.stmts = stmts
+    # set of stmts as string literals 
+    self.stmts = stmts
 
-    def combine(self, other):
-      args = {}
-      args.update(self.args)
-      args.update(other.args)
+  def each():
+      pass
 
-      indices = {}
-      indices.update(self.indices)
-      indices.update(other.indices)
+  def sum():
+      pass 
+  
+  def combine(self, other):
+    args = {}
+    args.update(self.args)
+    args.update(other.args)
 
-      stmts = set([])
-      stmts.update(self.stmts)
-      stmts.update(other.stmts)
-      return Kernel(args, indices, stmts)
+    indices = {}
+    indices.update(self.indices)
+    indices.update(other.indices)
+
+    stmts = set([])
+    stmts.update(self.stmts)
+    stmts.update(other.stmts)
+    return Kernel(args, indices, stmts)
                        
 
 
@@ -59,10 +82,22 @@ def as_expr(x):
   assert isinstance(x, Expr)
   return x 
 
+class Value(Expr):
+  _name_counter = 0
+  
+  def __init__(self, x, name = None):
+    self.x = x 
+    if name is None:
+      self._name_counter += 1
+      name = "value_%d" % self._name_counter 
+    self.name = name 
+  
+
+
 class Each(Expr):
   _name_counter = 0
 
-  def __init__(self, x, name = None, axis = None):    
+  def __init__(self, *xs, iname = None, axis = None):    
     Expr.__init__(self)
     assert axis is None
     assert isinstance(x, np.ndarray)
